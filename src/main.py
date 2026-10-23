@@ -119,6 +119,9 @@ app.add_middleware(CaptureApiResponseMiddleware)
 app.include_router(control_router, prefix="/api/control", tags=["External Control API"])
 
 app.include_router(dandan_router, prefix="/api/v1", tags=["DanDanPlay Compatible"], include_in_schema=False)
+# dandanplay v2 的标准节点路径不包含 Misaka 自定义的 token 段。
+# 同时保留上面的 /api/v1/{token}/api/v2 路径，兼容已有客户端和受保护部署。
+app.include_router(dandan_router, prefix="", tags=["DanDanPlay Compatible"], include_in_schema=False)
 
 # 包含所有非 dandanplay 的 API 路由
 app.include_router(api_router, prefix="/api")

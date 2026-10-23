@@ -88,8 +88,11 @@ search_router = APIRouter(route_class=DandanApiRoute)
     summary="[dandanplay兼容] 搜索节目和分集"
 )
 async def search_episodes_for_dandan(
-    anime: str = Query(..., description="节目名称"),
+    anime: Optional[str] = Query(None, description="节目名称"),
     episode: Optional[str] = Query(None, description="分集标题 (通常是数字)"),
+    tmdb_id: Optional[int] = Query(None, alias="tmdbId", description="TMDB 作品 ID"),
+    tmdb_id_type: int = Query(0, alias="tmdbIdType", description="0=电视剧，1=电影"),
+    v2: bool = Query(False, description="使用新版搜索引擎"),
     token: str = Depends(get_token_from_path),
     session: AsyncSession = Depends(get_db_session),
     scraper_manager: ScraperManager = Depends(get_scraper_manager),
@@ -101,7 +104,20 @@ async def search_episodes_for_dandan(
     它会搜索 **本地弹幕库** 中的番剧和分集信息。
     当启用并行搜索时，还会从源站补充缺失的分集。
     """
-    search_term = anime.strip()
+    if not anime and tmdb_id is None:
+        raise HTTPException(status_code=400, detail="anime 或 tmdbId 至少提供一个")
+    if tmdb_id_type not in (0, 1):
+        raise HTTPException(status_code=400, detail="tmdbIdType 必须为 0 或 1")
+
+    search_term = anime.strip() if anime else ""
+    if not search_term and tmdb_id is not None:
+        anime_id = await crud.get_anime_id_by_tmdb_id(session, str(tmdb_id))
+        if anime_id is not None:
+            anime_details = await crud.get_anime_details_for_dandan(session, anime_id)
+            search_term = str(anime_details.get("animeTitle") or "").strip()
+    if not search_term:
+        search_term = str(tmdb_id)
+
     return await search_implementation(
         search_term, episode, session,
         scraper_manager=scraper_manager,
@@ -119,6 +135,7 @@ async def search_anime_for_dandan(
     keyword: Optional[str] = Query(None, description="节目名称 (兼容 keyword)"),
     anime: Optional[str] = Query(None, description="节目名称 (兼容 anime)"),
     episode: Optional[str] = Query(None, description="分集标题 (此接口中未使用)"),
+    v2: bool = Query(False, description="使用新版搜索引擎"),
     token: str = Depends(get_token_from_path),
     session: AsyncSession = Depends(get_db_session),
     scraper_manager: ScraperManager = Depends(get_scraper_manager),

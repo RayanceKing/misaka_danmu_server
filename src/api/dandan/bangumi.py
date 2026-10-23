@@ -100,6 +100,11 @@ def generate_episode_id(anime_id: int, source_order: int, episode_number: int) -
     response_model=BangumiDetailsResponse,
     summary="[dandanplay兼容] 获取番剧详情"
 )
+@bangumi_router.get(
+    "/bangumi/bgmtv/{bangumiId}",
+    response_model=BangumiDetailsResponse,
+    summary="[dandanplay兼容] 通过 Bangumi.tv subject ID 获取番剧详情"
+)
 async def get_bangumi_details(
     bangumiId: str = Path(..., description="作品ID, A开头的备用ID, 或真实的Bangumi ID"),
     token: str = Depends(get_token_from_path),
@@ -391,4 +396,3 @@ async def get_bangumi_details(
     )
 
     return BangumiDetailsResponse(bangumi=bangumi_details)
-

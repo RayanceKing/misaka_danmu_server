@@ -10,7 +10,7 @@ import logging
 import ipaddress
 from typing import Callable
 
-from fastapi import HTTPException, Path, Request, Response, status, Depends
+from fastapi import HTTPException, Request, Response, status, Depends
 from fastapi.responses import JSONResponse
 from fastapi.routing import APIRoute
 from sqlalchemy.ext.asyncio import AsyncSession
@@ -67,7 +67,6 @@ class DandanApiRoute(APIRoute):
 
 async def get_token_from_path(
     request: Request,
-    token: str = Path(..., description="路径中的API授权令牌"),
     session: AsyncSession = Depends(get_db_session),
 ):
     """
@@ -75,6 +74,12 @@ async def get_token_from_path(
     这是为 dandanplay 客户端设计的特殊鉴权方式。
     此函数现在还负责UA过滤和访问日志记录。
     """
+    # 标准 dandanplay v2 节点是公开 API，路径为 /api/v2/...；
+    # 保留带 token 的旧 Misaka 路径用于需要访问控制的部署。
+    token = request.path_params.get("token")
+    if token is None:
+        return ""
+
     # --- 新增：解析真实客户端IP ---
     # --- 新增：解析真实客户端IP，支持CIDR ---
     config_manager: ConfigManager = request.app.state.config_manager
@@ -176,4 +181,3 @@ async def get_token_from_path(
         request.state.token_log_id = log_id
 
     return token
-

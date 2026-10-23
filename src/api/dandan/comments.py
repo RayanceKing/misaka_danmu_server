@@ -224,7 +224,7 @@ async def get_comments_for_dandan(
     chConvert: int = Query(0, description="中文简繁转换。0-不转换，1-转换为简体，2-转换为繁体。"),
     # 'from' 是 Python 的关键字，所以我们必须使用别名
     fromTime: int = Query(0, alias="from", description="弹幕开始时间(秒)"),
-    withRelated: bool = Query(True, description="是否包含关联弹幕"),
+    withRelated: bool = Query(False, description="是否包含关联弹幕"),
     async_mode: bool = Query(False, alias="async", description="异步模式：传入1的时候，在超时响应的情况下返回taskid"),
     token: str = Depends(get_token_from_path),
     session: AsyncSession = Depends(get_db_session),

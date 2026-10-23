@@ -258,3 +258,11 @@ dandan_router.include_router(search_router, prefix="/{token}")
 dandan_router.include_router(match_router, prefix="/{token}")
 dandan_router.include_router(version_router, prefix="/{token}")
 
+# 标准 dandanplay v2 节点路径：/api/v2/...，不携带 Misaka token。
+# 路由处理器仍接受带 token 的旧路径，便于同一实例兼容两种部署方式。
+dandan_router.include_router(comments_router, prefix="/api/v2")
+dandan_router.include_router(taskcomment_router, prefix="/api/v2")
+dandan_router.include_router(bangumi_router, prefix="/api/v2")
+dandan_router.include_router(search_router, prefix="/api/v2")
+dandan_router.include_router(match_router, prefix="/api/v2")
+dandan_router.include_router(version_router, prefix="/api/v2")
